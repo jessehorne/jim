@@ -7,19 +7,25 @@ import (
 	"log"
 )
 
-func handleInput(s tcell.Screen) {
+func handleInput(fv *jim.Fv) {
 L:
 	for {
-		ev := s.PollEvent()
+		ev := fv.Screen.PollEvent()
 
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
-			fmt.Println(ev.Key())
 			if ev.Key() == tcell.KeyEscape {
 				break L
 			}
+		case *tcell.EventMouse:
+			x, y := ev.Position()
+			buttons := ev.Buttons()
+			fv.ButtonEvent(x, y, buttons)
 		case *tcell.EventResize:
-			s.Sync()
+			fv.Width, fv.Height = fv.Screen.Size()
+			fv.RefreshTree()
+			fv.DrawBackground()
+			fv.PrintTree()
 		}
 	}
 }
@@ -36,18 +42,20 @@ func main() {
 	}
 
 	s.SetStyle(tcell.StyleDefault.Foreground(jim.ColorWhite).Background(jim.ColorBlack))
-	s.Clear()
+	s.EnableMouse()
 
+	s.Clear()
 	s.Show()
 	s.Sync()
 
 	// create folder/file viewer
 	newFv := jim.NewFv(s)
-	newFv.Refresh()
-	newFv.Redraw()
+	newFv.ExpandDir(nil) // expand ./ in the main tree view
+	newFv.RefreshTree()
+	newFv.PrintTree()
 
 	// begin loop
-	handleInput(s)
+	handleInput(newFv)
 
 	s.Fini()
 
