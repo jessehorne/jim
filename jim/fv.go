@@ -21,11 +21,11 @@ type Fv struct {
 }
 
 func NewFv(s tcell.Screen) *Fv {
-	w, h := s.Size()
+	_, h := s.Size()
 
 	return &Fv{
 		Screen:     s,
-		Width:      w,
+		Width:      20,
 		Height:     h,
 		Bg:         ColorBlack,
 		Files:      []*File{},
@@ -142,6 +142,7 @@ func (fv *Fv) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 func (fv *Fv) RefreshTree() {
 	fv.FileXs = []*File{}
 	fv.SyncFileXs(0, fv.Files)
+	fv.PrintTree()
 }
 
 func (fv *Fv) SyncFileXs(count int, files []*File) int {
