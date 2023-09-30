@@ -1,9 +1,12 @@
 package jim
 
-import "github.com/gdamore/tcell"
+import (
+	"github.com/gdamore/tcell"
+)
 
 type Tab struct {
 	Screen  tcell.Screen
+	Manager *Manager
 	File    *File
 	Active  bool
 	Width   int
@@ -15,9 +18,10 @@ type Tab struct {
 	Content string
 }
 
-func NewTab(screen tcell.Screen) *Tab {
+func NewTab(screen tcell.Screen, m *Manager) *Tab {
 	return &Tab{
-		Screen: screen,
+		Screen:  screen,
+		Manager: m,
 	}
 }
 
@@ -34,6 +38,8 @@ func (t *Tab) Redraw() {
 		return
 	}
 
+	t.Manager.ClearScreen()
+
 	style := tcell.StyleDefault.Background(ColorBlack).Foreground(ColorWhite)
 
 	x, y := t.OffsetX, t.OffsetY
@@ -47,4 +53,6 @@ func (t *Tab) Redraw() {
 			x++
 		}
 	}
+
+	t.Screen.Sync()
 }
