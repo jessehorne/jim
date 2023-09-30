@@ -7,9 +7,10 @@ import (
 )
 
 type Manager struct {
-	Screen tcell.Screen
-	Fv     *Fv
-	Tabs   []*Tab
+	Screen        tcell.Screen
+	Fv            *Fv
+	Tabs          []*Tab
+	LastActiveTab *Tab
 }
 
 func NewManager(s tcell.Screen) *Manager {
@@ -36,47 +37,78 @@ func (m *Manager) Init() {
 	newTab := NewTab(m.Screen, m)
 	newTab.Width = w - m.Fv.Width
 	newTab.Height = h
-	newTab.OffsetX = m.Fv.Width
+	newTab.OffsetX = m.Fv.WallX
 	newTab.OffsetY = 1
 	newTab.SetContent(string(data))
 	newTab.Redraw()
 
-	m.RedrawTabs()
+	m.RedrawTabLabels()
 }
 
-func (m *Manager) ClearScreen() {
+func (m *Manager) ClearEditor() {
 	w, h := m.Screen.Size()
-	blackStyle := tcell.StyleDefault.Background(ColorBlack).Foreground(ColorWhite)
+	blackStyle := tcell.StyleDefault.Background(ColorDark).Foreground(ColorWhite)
 
 	for y := 1; y < h; y++ {
 		for x := m.Fv.WallX; x < w; x++ {
 			m.Screen.SetCell(x, y, blackStyle, ' ')
 		}
 	}
+
+	m.Screen.Sync()
 }
 
-func (m *Manager) RedrawTabs() {
+func (m *Manager) RedrawTabLabels() {
 	w, _ := m.Screen.Size()
 
 	// draw black line up top
-	blackStyle := tcell.StyleDefault.Background(ColorDarkBlack).Foreground(ColorBlack)
+	blackStyle := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorWhite)
 	for i := m.Fv.WallX; i < w; i++ {
 		m.Screen.SetCell(i, 0, blackStyle, ' ')
 	}
 
 	currentX := m.Fv.WallX
-	style := tcell.StyleDefault.Background(ColorWhite).Foreground(ColorGrey)
+	style := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorWhite)
+	activeStyle := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorLightBlue)
 	for _, t := range m.Tabs {
 		label := fmt.Sprintf(" %s ", t.File.Name)
 		for _, l := range label {
-			m.Screen.SetCell(currentX, 0, style, l)
+			if t.Active {
+				m.Screen.SetCell(currentX, 0, activeStyle, l)
+			} else {
+				m.Screen.SetCell(currentX, 0, style, l)
+			}
 			currentX++
 		}
-		currentX++                                // add one more space for padding between tabs
 		m.Screen.SetCell(currentX, 0, style, ' ') // draw black space between tabs
+		currentX += 2                             // add one more space for padding between tabs
 	}
 
 	m.Screen.Sync()
+}
+
+func (m *Manager) CloseTab(t *Tab) {
+	var removedIndex = -1
+	for i := 0; i < len(m.Tabs); i++ {
+		if m.Tabs[i] == t {
+			m.Tabs = append(m.Tabs[:i], m.Tabs[i+1:]...)
+			removedIndex = i
+			break
+		}
+	}
+
+	if len(m.Tabs) > 0 {
+		if removedIndex > 0 {
+			m.OpenTab(m.Tabs[removedIndex-1].File)
+		} else {
+			m.ClearEditor()
+			m.LastActiveTab = nil
+		}
+	} else {
+		m.ClearEditor()
+		m.RedrawTabLabels()
+		m.LastActiveTab = nil
+	}
 }
 
 func (m *Manager) OpenTab(f *File) {
@@ -104,14 +136,26 @@ func (m *Manager) OpenTab(f *File) {
 		newTab.OffsetY = 1
 		newTab.File = f
 		newTab.SetContent(string(data))
+		newTab.Active = true
 		newTab.Redraw()
+
+		if m.LastActiveTab != nil {
+			m.LastActiveTab.Active = false
+		}
+		m.LastActiveTab = newTab
 
 		m.Tabs = append(m.Tabs, newTab)
 
-		m.RedrawTabs()
+		m.RedrawTabLabels()
 	} else {
+		if m.LastActiveTab != nil {
+			m.LastActiveTab.Active = false
+		}
+		m.LastActiveTab = t
+
+		t.Active = true
 		t.Redraw()
-		m.RedrawTabs()
+		m.RedrawTabLabels()
 	}
 
 	// switch to current tab
@@ -150,6 +194,8 @@ L:
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape {
 				break L
+			} else if ev.Key() == tcell.KeyCtrlW {
+				m.CloseTab(m.LastActiveTab)
 			}
 		case *tcell.EventMouse:
 			x, y := ev.Position()

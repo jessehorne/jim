@@ -18,7 +18,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	s.SetStyle(tcell.StyleDefault.Foreground(jim.ColorWhite).Background(jim.ColorBlack))
+	s.SetStyle(tcell.StyleDefault.Background(jim.ColorDark).Foreground(jim.ColorWhite))
 	s.EnableMouse()
 	s.Clear()
 	s.Show()

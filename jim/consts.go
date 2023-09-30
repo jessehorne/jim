@@ -10,4 +10,9 @@ var (
 	ColorRed       = tcell.NewRGBColor(193, 98, 102)
 	ColorGrey      = tcell.NewRGBColor(157, 163, 157)
 	ColorWhite     = tcell.NewRGBColor(240, 240, 240)
+
+	ColorDark       = tcell.NewHexColor(0x06070E)
+	ColorDarkGreen  = tcell.NewHexColor(0x29524A)
+	ColorLightGreen = tcell.NewHexColor(0x94A187)
+	ColorLightBlue  = tcell.NewHexColor(0x3777FF)
 )

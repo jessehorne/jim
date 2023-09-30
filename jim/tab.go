@@ -38,9 +38,9 @@ func (t *Tab) Redraw() {
 		return
 	}
 
-	t.Manager.ClearScreen()
+	t.Manager.ClearEditor()
 
-	style := tcell.StyleDefault.Background(ColorBlack).Foreground(ColorWhite)
+	style := tcell.StyleDefault.Background(ColorDark).Foreground(ColorWhite)
 
 	x, y := t.OffsetX, t.OffsetY
 	for _, c := range t.Content {
