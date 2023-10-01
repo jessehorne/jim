@@ -2,7 +2,7 @@ package jim
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"os"
 )
 

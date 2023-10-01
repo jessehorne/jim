@@ -1,7 +1,7 @@
 package jim
 
 import (
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 )
 
 type Tab struct {
@@ -16,6 +16,8 @@ type Tab struct {
 	OffsetX int
 	OffsetY int
 	Content string
+	CursorX int
+	CursorY int
 }
 
 func NewTab(screen tcell.Screen, m *Manager) *Tab {
@@ -53,6 +55,10 @@ func (t *Tab) Redraw() {
 			x++
 		}
 	}
+
+	// draw cursor
+	t.Screen.SetCursorStyle(tcell.CursorStyleBlinkingBar)
+	t.Screen.ShowCursor(t.OffsetX+t.CursorX, t.OffsetY+t.CursorY)
 
 	t.Screen.Sync()
 }

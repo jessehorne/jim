@@ -1,6 +1,6 @@
 package jim
 
-import "github.com/gdamore/tcell"
+import "github.com/gdamore/tcell/v2"
 
 var (
 	ColorDarkBlack = tcell.NewRGBColor(0, 0, 0)
