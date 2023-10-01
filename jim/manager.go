@@ -100,6 +100,8 @@ func (m *Manager) CloseTab(t *Tab) {
 	if len(m.Tabs) > 0 {
 		if removedIndex > 0 {
 			m.OpenTab(m.Tabs[removedIndex-1].File)
+		} else if removedIndex == 0 {
+			m.OpenTab(m.Tabs[0].File)
 		} else {
 			m.ClearEditor()
 			m.LastActiveTab = nil

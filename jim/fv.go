@@ -164,7 +164,7 @@ func (fv *Fv) PrintDir(count int, files []*File) int {
 	dirStyle := tcell.StyleDefault.Background(fv.Bg).Foreground(ColorOrange)
 
 	offsetX := 2
-	tabSize := 3
+	tabSize := 1
 
 	for i := 0; i < len(files); i++ {
 		f := files[i]
