@@ -62,27 +62,35 @@ func (t *Tab) LoadFile(path string) error {
 	return nil
 }
 
+func (t *Tab) ScrollUp() {
+	if t.CursorY > 0 {
+		if t.OffsetY < 1 {
+			t.CursorY--
+			t.OffsetY++
+			t.Redraw()
+		} else {
+			t.CursorY--
+		}
+	}
+}
+
+func (t *Tab) ScrollDown() {
+	if t.CursorY <= t.Height-3 {
+		t.CursorY++
+	} else {
+		if t.CursorY < len(t.Content) {
+			t.OffsetY--
+			t.CursorY++
+			t.Redraw()
+		}
+	}
+}
+
 func (t *Tab) MoveCursor(dir int) {
 	if dir == CursorDirUp {
-		if t.CursorY > 0 {
-			if t.OffsetY < 1 {
-				t.CursorY--
-				t.OffsetY++
-				t.Redraw()
-			} else {
-				t.CursorY--
-			}
-		}
+		t.ScrollUp()
 	} else if dir == CursorDirDown {
-		if t.CursorY <= t.Height-3 {
-			t.CursorY++
-		} else {
-			if t.CursorY < len(t.Content) {
-				t.OffsetY--
-				t.CursorY++
-				t.Redraw()
-			}
-		}
+		t.ScrollDown()
 	}
 
 	t.Screen.ShowCursor(t.OffsetX+t.CursorX, t.OffsetY+t.CursorY)
