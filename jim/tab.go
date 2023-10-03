@@ -62,15 +62,27 @@ func (t *Tab) LoadFile(path string) error {
 	return nil
 }
 
+func (t *Tab) GetCursorLine() int {
+	return t.CursorY + t.OffsetY - 1
+}
+
 func (t *Tab) ScrollUp() {
 	if t.CursorY > 0 {
 		if t.OffsetY < 1 {
 			t.CursorY--
 			t.OffsetY++
-			t.Redraw()
 		} else {
 			t.CursorY--
 		}
+
+		// get above line
+		if t.GetCursorLine() > 0 {
+			if t.CursorX > len(t.Content[t.GetCursorLine()]) {
+				t.CursorX = len(t.Content[t.GetCursorLine()])
+			}
+		}
+
+		t.Redraw()
 	}
 }
 
@@ -84,6 +96,35 @@ func (t *Tab) ScrollDown() {
 			t.Redraw()
 		}
 	}
+
+	if t.GetCursorLine() < len(t.Content) {
+		if t.CursorX > len(t.Content[t.GetCursorLine()]) {
+			t.CursorX = len(t.Content[t.GetCursorLine()])
+			t.Redraw()
+		}
+	}
+}
+
+func (t *Tab) ScrollRight() {
+	if t.CursorX < len(t.Content[t.GetCursorLine()]) {
+		t.CursorX++
+	} else {
+		if t.GetCursorLine()+1 < len(t.Content) {
+			t.CursorY++
+			t.CursorX = 0
+		}
+	}
+}
+
+func (t *Tab) ScrollLeft() {
+	if t.CursorX > 0 {
+		t.CursorX--
+	} else {
+		if t.GetCursorLine() > 0 {
+			t.CursorY--
+			t.CursorX = len(t.Content[t.GetCursorLine()])
+		}
+	}
 }
 
 func (t *Tab) MoveCursor(dir int) {
@@ -91,6 +132,10 @@ func (t *Tab) MoveCursor(dir int) {
 		t.ScrollUp()
 	} else if dir == CursorDirDown {
 		t.ScrollDown()
+	} else if dir == CursorDirRight {
+		t.ScrollRight()
+	} else if dir == CursorDirLeft {
+		t.ScrollLeft()
 	}
 
 	t.Screen.ShowCursor(t.OffsetX+t.CursorX, t.OffsetY+t.CursorY)
