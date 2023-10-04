@@ -20,6 +20,8 @@ func NewManager(s tcell.Screen) *Manager {
 }
 
 func (m *Manager) Init() {
+	InitKeywords()
+
 	// create folder/file viewer
 	m.Fv = NewFv(m.Screen)
 	m.Fv.ExpandDir(nil) // expand ./ in the main tree view
@@ -30,11 +32,10 @@ func (m *Manager) Init() {
 
 func (m *Manager) ClearEditor() {
 	w, h := m.Screen.Size()
-	blackStyle := tcell.StyleDefault.Background(ColorDark).Foreground(ColorWhite)
 
 	for y := 1; y < h; y++ {
 		for x := m.Fv.WallX; x < w; x++ {
-			m.Screen.SetCell(x, y, blackStyle, ' ')
+			m.Screen.SetCell(x, y, StyleEditor, ' ')
 		}
 	}
 
@@ -45,26 +46,24 @@ func (m *Manager) RedrawTabLabels() {
 	w, _ := m.Screen.Size()
 
 	// draw black line up top
-	blackStyle := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorWhite)
+	blackStyle := tcell.StyleDefault.Background(ColorDarkGrey).Foreground(ColorWhite)
 	for i := m.Fv.WallX; i < w; i++ {
 		m.Screen.SetCell(i, 0, blackStyle, ' ')
 	}
 
 	currentX := m.Fv.WallX
-	style := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorWhite)
-	activeStyle := tcell.StyleDefault.Background(ColorGrey).Foreground(ColorLightBlue)
 	for _, t := range m.Tabs {
 		label := fmt.Sprintf(" %s ", t.File.Name)
 		for _, l := range label {
 			if t.Active {
-				m.Screen.SetCell(currentX, 0, activeStyle, l)
+				m.Screen.SetCell(currentX, 0, StyleTabActive, l)
 			} else {
-				m.Screen.SetCell(currentX, 0, style, l)
+				m.Screen.SetCell(currentX, 0, StyleTab, l)
 			}
 			currentX++
 		}
-		m.Screen.SetCell(currentX, 0, style, ' ') // draw black space between tabs
-		currentX += 2                             // add one more space for padding between tabs
+		m.Screen.SetCell(currentX, 0, blackStyle, ' ') // draw black space between tabs
+		currentX += 2                                  // add one more space for padding between tabs
 	}
 
 	m.Screen.Sync()
@@ -112,7 +111,7 @@ func (m *Manager) OpenTab(f *File) {
 		newTab := NewTab(m.Screen, m)
 		newTab.Width = w - m.Fv.WallX
 		newTab.Height = h
-		newTab.OffsetX = m.Fv.WallX
+		newTab.OffsetX = m.Fv.WallX + 7
 		newTab.OffsetY = 1
 		newTab.File = f
 		newTab.LoadFile(f.FullPath)
@@ -160,6 +159,16 @@ func (m *Manager) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 		} else if f.Type == FileTypeFile {
 			m.OpenTab(f)
 		}
+	case tcell.WheelUp:
+		m.MoveCursor(CursorDirUp)
+	case tcell.WheelDown:
+		m.MoveCursor(CursorDirDown)
+	}
+}
+
+func (m *Manager) TypeCharacter(c rune) {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.TypeCharacter(c)
 	}
 }
 
@@ -189,6 +198,8 @@ L:
 				m.MoveCursor(CursorDirLeft)
 			} else if ev.Key() == tcell.KeyRight {
 				m.MoveCursor(CursorDirRight)
+			} else {
+				m.TypeCharacter(ev.Rune())
 			}
 
 		case *tcell.EventMouse:

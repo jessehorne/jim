@@ -3,6 +3,7 @@ package jim
 import (
 	"github.com/gdamore/tcell/v2"
 	"os"
+	"strconv"
 )
 
 const (
@@ -11,6 +12,10 @@ const (
 	CursorDirLeft
 	CursorDirRight
 )
+
+var Typeables = []rune{
+	'A',
+}
 
 type Tab struct {
 	Screen    tcell.Screen
@@ -49,6 +54,10 @@ func (t *Tab) SetContent(s string) {
 		}
 	}
 	t.LineCount = lineCount + 1
+}
+
+func (t *Tab) TypeCharacter(c rune) {
+	return
 }
 
 func (t *Tab) LoadFile(path string) error {
@@ -138,6 +147,7 @@ func (t *Tab) MoveCursor(dir int) {
 		t.ScrollLeft()
 	}
 
+	t.Redraw()
 	t.Screen.ShowCursor(t.OffsetX+t.CursorX, t.OffsetY+t.CursorY)
 	t.Screen.Sync()
 }
@@ -145,16 +155,40 @@ func (t *Tab) MoveCursor(dir int) {
 func (t *Tab) Redraw() {
 	t.Manager.ClearEditor()
 
-	style := tcell.StyleDefault.Background(ColorDark).Foreground(ColorWhite)
-
 	x, y := t.OffsetX, t.OffsetY
 
 	for lineNumber := 0 - t.OffsetY; lineNumber < t.Height-t.OffsetY; lineNumber++ {
+		// draw line number
+		lineString := strconv.FormatInt(int64(lineNumber), 10)
+
+		// draw bg of line number
+		for i := 0; i < 7; i++ {
+			t.Screen.SetCell(x+i-7, y+lineNumber, StyleLineNumber, ' ')
+		}
+
+		for i := len(lineString) - 1; i >= 0; i-- {
+			t.Screen.SetCell(x-i-2, y+lineNumber, StyleLineNumber, rune(lineString[len(lineString)-i-1]))
+		}
+
 		if lineNumber >= 0 && lineNumber < len(t.Content) {
 			line := t.Content[lineNumber]
 
+			var word string
 			for i := 0; i < len(line); i++ {
-				t.Screen.SetCell(x+i, y+lineNumber, style, rune(line[i]))
+				t.Screen.SetCell(x+i, y+lineNumber, StyleEditor, rune(line[i]))
+
+				c := line[i]
+
+				if c == ' ' || c == '\t' {
+					if len(word) > 0 {
+						PrintWord(t.Screen, word, x+i-len(word), y+lineNumber)
+						word = ""
+					}
+
+					t.Screen.SetCell(x+i, y+lineNumber, StyleEditor, rune(c))
+				} else {
+					word = word + string(c)
+				}
 			}
 		}
 	}
