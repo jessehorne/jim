@@ -19,8 +19,16 @@ func NewManager(s tcell.Screen) *Manager {
 	}
 }
 
+func InitTypeables() {
+	TypeablesMap = map[rune]bool{}
+	for i := 0; i < len(Typeables); i++ {
+		TypeablesMap[Typeables[i]] = true
+	}
+}
+
 func (m *Manager) Init() {
 	InitKeywords()
+	InitTypeables()
 
 	// create folder/file viewer
 	m.Fv = NewFv(m.Screen)
@@ -166,6 +174,12 @@ func (m *Manager) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 	}
 }
 
+func (m *Manager) Backspace() {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.Backspace()
+	}
+}
+
 func (m *Manager) TypeCharacter(c rune) {
 	if m.LastActiveTab != nil {
 		m.LastActiveTab.TypeCharacter(c)
@@ -198,6 +212,8 @@ L:
 				m.MoveCursor(CursorDirLeft)
 			} else if ev.Key() == tcell.KeyRight {
 				m.MoveCursor(CursorDirRight)
+			} else if ev.Key() == tcell.KeyBackspace {
+				m.Backspace()
 			} else {
 				m.TypeCharacter(ev.Rune())
 			}

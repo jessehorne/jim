@@ -14,8 +14,17 @@ const (
 )
 
 var Typeables = []rune{
-	'A',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
+	'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+',
+	'[', ']', '\\', ';', '\'', ',', '.', '/',
+	'{', '}', '|', ':', '"', '<', '>', '?',
+	'`', '~',
+	' ', '\t',
 }
+
+var TypeablesMap map[rune]bool
 
 type Tab struct {
 	Screen    tcell.Screen
@@ -57,7 +66,35 @@ func (t *Tab) SetContent(s string) {
 }
 
 func (t *Tab) TypeCharacter(c rune) {
-	return
+	_, ok := TypeablesMap[c]
+
+	if !ok {
+		return
+	}
+
+	t.CursorX++
+
+	newLine := t.Content[t.GetCursorLine()][:t.CursorX-1] + string(c) + t.Content[t.GetCursorLine()][t.CursorX-1:]
+	t.Content[t.GetCursorLine()] = newLine
+	t.Redraw()
+}
+
+func (t *Tab) Backspace() {
+	if t.CursorX > 0 {
+		firstPart := t.Content[t.GetCursorLine()][:t.CursorX-1]
+		nextPart := t.Content[t.GetCursorLine()][t.CursorX:]
+		t.Content[t.GetCursorLine()] = firstPart + nextPart
+		t.CursorX--
+		t.Redraw()
+	} else {
+		if t.GetCursorLine() > 0 {
+			t.MoveCursor(CursorDirUp)
+			t.CursorX = len(t.Content[t.GetCursorLine()])
+			t.Content[t.GetCursorLine()] = t.Content[t.GetCursorLine()] + t.Content[t.GetCursorLine()+1]
+			t.Content = append(t.Content[:t.GetCursorLine()+1], t.Content[t.GetCursorLine()+2:]...)
+			t.Redraw()
+		}
+	}
 }
 
 func (t *Tab) LoadFile(path string) error {
@@ -72,36 +109,32 @@ func (t *Tab) LoadFile(path string) error {
 }
 
 func (t *Tab) GetCursorLine() int {
-	return t.CursorY + t.OffsetY - 1
+	return -t.ScrollY + t.CursorY
 }
 
 func (t *Tab) ScrollUp() {
-	if t.CursorY > 0 {
-		if t.OffsetY < 1 {
-			t.CursorY--
-			t.OffsetY++
-		} else {
-			t.CursorY--
+	if t.CursorY == 0 {
+		if t.ScrollY < 0 {
+			t.ScrollY++
+			t.Redraw()
 		}
+	} else {
+		t.CursorY--
+	}
 
-		// get above line
-		if t.GetCursorLine() > 0 {
-			if t.CursorX > len(t.Content[t.GetCursorLine()]) {
-				t.CursorX = len(t.Content[t.GetCursorLine()])
-			}
+	if t.GetCursorLine() > 0 {
+		if t.CursorX > len(t.Content[t.GetCursorLine()]) {
+			t.CursorX = len(t.Content[t.GetCursorLine()])
 		}
-
-		t.Redraw()
 	}
 }
 
 func (t *Tab) ScrollDown() {
-	if t.CursorY <= t.Height-3 {
+	if t.CursorY < t.Height-2 {
 		t.CursorY++
 	} else {
-		if t.CursorY < len(t.Content) {
-			t.OffsetY--
-			t.CursorY++
+		if t.GetCursorLine() < len(t.Content)-1 {
+			t.ScrollY--
 			t.Redraw()
 		}
 	}
@@ -152,12 +185,48 @@ func (t *Tab) MoveCursor(dir int) {
 	t.Screen.Sync()
 }
 
+func (t *Tab) RedrawLine(line int) {
+	// draw clear line
+	l := t.Content[t.GetCursorLine()]
+
+	x, y := t.OffsetX+t.ScrollX, t.OffsetY
+
+	for i := 0; i < t.Width; i++ {
+		t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, ' ')
+	}
+
+	// draw letters
+	var word string
+	for i := 0; i < len(l); i++ {
+		t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, rune(l[i]))
+
+		c := l[i]
+
+		if c == ' ' || c == '\t' {
+			if len(word) > 0 {
+				PrintWord(t.Screen, word, x+i-len(word), y+t.GetCursorLine())
+				word = ""
+			}
+
+			t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, rune(c))
+		} else {
+			word = word + string(c)
+		}
+	}
+
+	// draw cursor
+	t.Screen.SetCursorStyle(tcell.CursorStyleBlinkingBar)
+	t.Screen.ShowCursor(t.OffsetX+t.CursorX, t.OffsetY+t.CursorY)
+
+	t.Screen.Sync()
+}
+
 func (t *Tab) Redraw() {
 	t.Manager.ClearEditor()
 
-	x, y := t.OffsetX, t.OffsetY
+	x, y := t.OffsetX, t.OffsetY+t.ScrollY
 
-	for lineNumber := 0 - t.OffsetY; lineNumber < t.Height-t.OffsetY; lineNumber++ {
+	for lineNumber := -t.ScrollY; lineNumber < -t.ScrollY+t.Height-1; lineNumber++ {
 		// draw line number
 		lineString := strconv.FormatInt(int64(lineNumber), 10)
 
