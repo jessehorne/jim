@@ -19,6 +19,7 @@ var StyleEditor = tcell.StyleDefault.Background(ColorDarkGrey).Foreground(ColorW
 var StyleTab = tcell.StyleDefault.Background(ColorTabBg).Foreground(ColorWhite)
 var StyleTabActive = tcell.StyleDefault.Background(ColorTabBgActive).Foreground(ColorWhite)
 
+
 func InitKeywords() {
 	KeywordMap = map[string]tcell.Style{}
 

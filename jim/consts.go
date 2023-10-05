@@ -21,4 +21,6 @@ var (
 
 	ColorTabBg       = tcell.NewHexColor(0x3c3f41)
 	ColorTabBgActive = tcell.NewHexColor(0x4d4a52)
+
+	ColorYellow = tcell.NewHexColor(0xE1D89F)
 )

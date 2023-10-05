@@ -41,6 +41,7 @@ type Tab struct {
 	LineCount int
 	CursorX   int
 	CursorY   int
+	Edited bool
 }
 
 func NewTab(screen tcell.Screen, m *Manager) *Tab {
@@ -48,6 +49,27 @@ func NewTab(screen tcell.Screen, m *Manager) *Tab {
 		Screen:  screen,
 		Manager: m,
 	}
+}
+
+func (t *Tab) SaveToFile() {
+	f, err := os.Create(t.File.FullPath)
+	if err != nil {
+		return
+	}
+
+	for _, l := range t.Content {
+		f.WriteString(l + "\n")
+	}
+
+	if t.Content[len(t.Content)-1] != "" {
+		t.Content = append(t.Content, "")
+		t.Redraw()
+	}
+
+	if err := f.Close(); err != nil {
+		return
+	}
+
 }
 
 func (t *Tab) SetContent(s string) {
@@ -62,10 +84,15 @@ func (t *Tab) SetContent(s string) {
 			temp = temp + string(s[i])
 		}
 	}
+
+	t.Content = append(t.Content, temp)
+
 	t.LineCount = lineCount + 1
 }
 
 func (t *Tab) TypeCharacter(c rune) {
+	t.Edited = true
+
 	_, ok := TypeablesMap[c]
 
 	if !ok {
@@ -97,6 +124,29 @@ func (t *Tab) Backspace() {
 	}
 }
 
+func (t *Tab) Newline() {
+	index := t.GetCursorLine()
+
+	if len(t.Content) == index {
+		t.Content = append(t.Content, " ")
+	}
+
+	dataFirst := t.Content[t.GetCursorLine()][:t.CursorX]
+	dataSecond := t.Content[t.GetCursorLine()][t.CursorX:]
+
+	firstHalf := t.Content[:t.GetCursorLine()+1]
+	secondHalf := t.Content[t.GetCursorLine():]
+
+	t.Content = append(firstHalf, secondHalf...)
+
+	t.Content[t.GetCursorLine()] = dataFirst
+	t.Content[t.GetCursorLine()+1] = dataSecond
+
+	t.CursorX = 0
+	t.MoveCursor(CursorDirDown)
+	t.Redraw()
+}
+
 func (t *Tab) LoadFile(path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -113,6 +163,10 @@ func (t *Tab) GetCursorLine() int {
 }
 
 func (t *Tab) ScrollUp() {
+	if t.GetCursorLine() == 0 {
+		return
+	}
+
 	if t.CursorY == 0 {
 		if t.ScrollY < 0 {
 			t.ScrollY++
@@ -130,6 +184,10 @@ func (t *Tab) ScrollUp() {
 }
 
 func (t *Tab) ScrollDown() {
+	if t.GetCursorLine() == len(t.Content)-1 {
+		return
+	}
+
 	if t.CursorY < t.Height-2 {
 		t.CursorY++
 	} else {
@@ -226,7 +284,15 @@ func (t *Tab) Redraw() {
 
 	x, y := t.OffsetX, t.OffsetY+t.ScrollY
 
-	for lineNumber := -t.ScrollY; lineNumber < -t.ScrollY+t.Height-1; lineNumber++ {
+	var max int
+
+	if len(t.Content) < -t.ScrollY+t.Height-1 {
+		max = len(t.Content)
+	} else {
+		max = -t.ScrollY+t.Height-1
+	}
+
+	for lineNumber := -t.ScrollY; lineNumber < max; lineNumber++ {
 		// draw line number
 		lineString := strconv.FormatInt(int64(lineNumber), 10)
 

@@ -63,11 +63,18 @@ func (m *Manager) RedrawTabLabels() {
 	for _, t := range m.Tabs {
 		label := fmt.Sprintf(" %s ", t.File.Name)
 		for _, l := range label {
-			if t.Active {
+			s := StyleTabActive
+			if !t.Active {
+				s = StyleTab
 				m.Screen.SetCell(currentX, 0, StyleTabActive, l)
-			} else {
-				m.Screen.SetCell(currentX, 0, StyleTab, l)
 			}
+
+			if t.Edited {
+				s = s.Foreground(ColorYellow)
+			}
+
+			m.Screen.SetCell(currentX, 0, s, l)
+
 			currentX++
 		}
 		m.Screen.SetCell(currentX, 0, blackStyle, ' ') // draw black space between tabs
@@ -174,6 +181,18 @@ func (m *Manager) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 	}
 }
 
+func (m *Manager) SaveToFile() {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.SaveToFile()
+	}
+}
+
+func (m *Manager) Newline() {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.Newline()
+	}
+}
+
 func (m *Manager) Backspace() {
 	if m.LastActiveTab != nil {
 		m.LastActiveTab.Backspace()
@@ -214,6 +233,10 @@ L:
 				m.MoveCursor(CursorDirRight)
 			} else if ev.Key() == tcell.KeyBackspace {
 				m.Backspace()
+			} else if ev.Key() == tcell.KeyCtrlS {
+				m.SaveToFile()
+			} else if ev.Key() == tcell.KeyEnter {
+				m.Newline()
 			} else {
 				m.TypeCharacter(ev.Rune())
 			}
