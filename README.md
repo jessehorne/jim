@@ -1,6 +1,6 @@
 jim
 ===
 
-A code editor written in Go.
+A simple code editor written in Go.
 
 more coming soon...
