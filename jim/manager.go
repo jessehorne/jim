@@ -26,13 +26,17 @@ func InitTypeables() {
 	}
 }
 
-func (m *Manager) Init() {
+func (m *Manager) Init(dir string) {
 	InitKeywords()
 	InitTypeables()
 
 	// create folder/file viewer
 	m.Fv = NewFv(m.Screen)
-	m.Fv.ExpandDir(nil) // expand ./ in the main tree view
+	if dir == "" {
+		m.Fv.ExpandDir(nil, nil)
+	} else {
+		m.Fv.ExpandDir(nil, &dir)
+	}
 	m.Fv.RefreshTree()
 
 	m.RedrawTabLabels()
@@ -166,7 +170,7 @@ func (m *Manager) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 			if f.Expanded {
 				m.Fv.UnexpandDir(f)
 			} else {
-				m.Fv.ExpandDir(f)
+				m.Fv.ExpandDir(f, nil)
 			}
 			m.Fv.DrawBackground()
 			m.Fv.RefreshTree()

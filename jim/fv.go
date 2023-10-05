@@ -41,10 +41,14 @@ func (fv *Fv) UnexpandDir(parent *File) {
 	fv.PrintTree()
 }
 
-func (fv *Fv) ExpandDir(parent *File) {
+func (fv *Fv) ExpandDir(parent *File, p *string) {
 	var path string
 	if parent == nil {
-		path = "."
+		if p == nil {
+			path = "."
+		} else {
+			path = *p
+		}
 	} else {
 		path = parent.FullPath
 	}
@@ -129,7 +133,7 @@ func (fv *Fv) ButtonEvent(x int, y int, buttons tcell.ButtonMask) {
 			if f.Expanded {
 				fv.UnexpandDir(f)
 			} else {
-				fv.ExpandDir(f)
+				fv.ExpandDir(f, nil)
 			}
 			fv.DrawBackground()
 			fv.RefreshTree()
