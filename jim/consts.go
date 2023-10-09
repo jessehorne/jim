@@ -24,3 +24,12 @@ var (
 
 	ColorYellow = tcell.NewHexColor(0xE1D89F)
 )
+
+var HelpMessage = `jim - a simple terminal based code editor written in Go
+Usage:
+
+    jim PATH_TO_DIRECTORY
+
+The PATH_TO_DIRECTORY must exist and must be a directory.
+
+For more information, see https://github.com/jessehorne/jim`

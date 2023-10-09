@@ -10,11 +10,17 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalln("Please provide a path to the directory you'd like to open.")
+		fmt.Println("Provide a path to a directory or file.")
+		fmt.Println("Try '--help' for more information.")
 		return
 	}
 
 	dir := os.Args[1]
+
+	if dir == "--help" {
+		fmt.Println(jim.HelpMessage)
+		return
+	}
 
 	f, err := os.Open(dir)
 	if err != nil {
@@ -29,7 +35,9 @@ func main() {
 	}
 
 	if !fileInfo.IsDir() {
-		log.Fatalln("You must provide a path to a directory. You can't edit single files yet and also please check your path to make sure it exists.")
+		fmt.Println("Invalid directory path.")
+		fmt.Println("Try `--help` for more information.")
+		return
 	}
 
 	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
