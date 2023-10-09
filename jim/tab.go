@@ -41,7 +41,7 @@ type Tab struct {
 	LineCount int
 	CursorX   int
 	CursorY   int
-	Edited bool
+	Edited    bool
 }
 
 func NewTab(screen tcell.Screen, m *Manager) *Tab {
@@ -120,6 +120,29 @@ func (t *Tab) Backspace() {
 			t.Content[t.GetCursorLine()] = t.Content[t.GetCursorLine()] + t.Content[t.GetCursorLine()+1]
 			t.Content = append(t.Content[:t.GetCursorLine()+1], t.Content[t.GetCursorLine()+2:]...)
 			t.Redraw()
+		}
+	}
+}
+
+func (t *Tab) ScrollTo(pos int) {
+	t.ScrollY = pos
+	t.Redraw()
+}
+
+func (t *Tab) PageUp() {
+	if t.ScrollY < 0 {
+		t.ScrollTo(t.ScrollY + t.Height - 4)
+		if t.ScrollY > 0 {
+			t.ScrollTo(0)
+		}
+	}
+}
+
+func (t *Tab) PageDown() {
+	if t.ScrollY > -len(t.Content) {
+		t.ScrollTo(t.ScrollY - t.Height + 4)
+		if t.ScrollY < -len(t.Content) {
+			t.ScrollTo(-len(t.Content))
 		}
 	}
 }
@@ -289,7 +312,7 @@ func (t *Tab) Redraw() {
 	if len(t.Content) < -t.ScrollY+t.Height-1 {
 		max = len(t.Content)
 	} else {
-		max = -t.ScrollY+t.Height-1
+		max = -t.ScrollY + t.Height - 1
 	}
 
 	for lineNumber := -t.ScrollY; lineNumber < max; lineNumber++ {

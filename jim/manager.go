@@ -203,6 +203,18 @@ func (m *Manager) Backspace() {
 	}
 }
 
+func (m *Manager) PageUp() {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.PageUp()
+	}
+}
+
+func (m *Manager) PageDown() {
+	if m.LastActiveTab != nil {
+		m.LastActiveTab.PageDown()
+	}
+}
+
 func (m *Manager) TypeCharacter(c rune) {
 	if m.LastActiveTab != nil {
 		m.LastActiveTab.TypeCharacter(c)
@@ -241,6 +253,10 @@ L:
 				m.SaveToFile()
 			} else if ev.Key() == tcell.KeyEnter {
 				m.Newline()
+			} else if ev.Key() == tcell.KeyPgUp {
+				m.PageUp()
+			} else if ev.Key() == tcell.KeyPgDn {
+				m.PageDown()
 			} else {
 				m.TypeCharacter(ev.Rune())
 			}
