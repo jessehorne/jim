@@ -134,14 +134,18 @@ func (t *Tab) PageUp() {
 		if t.ScrollY > 0 {
 			t.ScrollTo(0)
 		}
+	} else {
+		t.CursorY = 0
+		t.ScrollTo(0)
 	}
 }
 
 func (t *Tab) PageDown() {
+	t.CursorY = 0
 	if t.ScrollY > -len(t.Content) {
 		t.ScrollTo(t.ScrollY - t.Height + 4)
 		if t.ScrollY < -len(t.Content) {
-			t.ScrollTo(-len(t.Content))
+			t.ScrollTo(-len(t.Content) + 1)
 		}
 	}
 }
@@ -206,7 +210,7 @@ func (t *Tab) ScrollUp() {
 }
 
 func (t *Tab) ScrollDown() {
-	if t.GetCursorLine() == len(t.Content)-1 {
+	if t.GetCursorLine() >= len(t.Content)-1 {
 		return
 	}
 
