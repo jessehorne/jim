@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/jessehorne/jim/jim"
 	"log"
 	"os"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/jessehorne/jim/jim"
 )
 
 func main() {
@@ -40,7 +41,7 @@ func main() {
 		return
 	}
 
-	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
+	tcell.SetEncodingFallback(tcell.EncodingFallbackUTF8)
 	s, err := tcell.NewScreen()
 	if err != nil {
 		log.Fatalln(err)

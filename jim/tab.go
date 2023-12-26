@@ -1,9 +1,10 @@
 package jim
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"os"
 	"strconv"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 const (
@@ -72,21 +73,19 @@ func (t *Tab) SaveToFile() {
 
 }
 
-func (t *Tab) SetContent(s string) {
+func (t *Tab) SetContent(s []byte) {
 	var temp string
 	var lineCount int
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
+	for _, c := range []rune(string(s)) {
+		if c == '\n' {
 			t.Content = append(t.Content, temp)
 			temp = ""
 			lineCount++
 		} else {
-			temp = temp + string(s[i])
+			temp = temp + string(c)
 		}
 	}
-
 	t.Content = append(t.Content, temp)
-
 	t.LineCount = lineCount + 1
 }
 
@@ -176,7 +175,7 @@ func (t *Tab) LoadFile(path string) error {
 		return err
 	}
 
-	t.SetContent(string(data))
+	t.SetContent(data)
 
 	return nil
 }
@@ -278,20 +277,18 @@ func (t *Tab) RedrawLine(line int) {
 
 	// draw letters
 	var word string
-	for i := 0; i < len(l); i++ {
-		t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, rune(l[i]))
-
-		c := l[i]
+	for i, c := range l {
+		t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, c)
 
 		if c == ' ' || c == '\t' {
 			if len(word) > 0 {
-				PrintWord(t.Screen, word, x+i-len(word), y+t.GetCursorLine())
+				PrintWord(t.Screen, word, x+i, y+t.GetCursorLine())
 				word = ""
 			}
 
-			t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, rune(c))
+			t.Screen.SetCell(x+i, y+t.GetCursorLine(), StyleEditor, c)
 		} else {
-			word = word + string(c)
+			word += string(c)
 		}
 	}
 
@@ -332,10 +329,8 @@ func (t *Tab) Redraw() {
 			line := t.Content[lineNumber]
 
 			var word string
-			for i := 0; i < len(line); i++ {
-				t.Screen.SetCell(x+i, y+lineNumber, StyleEditor, rune(line[i]))
-
-				c := line[i]
+			for i, c := range line {
+				t.Screen.SetContent(x+i, y+lineNumber, c, nil, StyleEditor)
 
 				if c == ' ' || c == '\t' {
 					if len(word) > 0 {
@@ -343,7 +338,7 @@ func (t *Tab) Redraw() {
 						word = ""
 					}
 
-					t.Screen.SetCell(x+i, y+lineNumber, StyleEditor, rune(c))
+					t.Screen.SetContent(x+i, y+lineNumber, c, nil, StyleEditor)
 				} else {
 					word = word + string(c)
 				}

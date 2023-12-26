@@ -1,6 +1,8 @@
 package jim
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 var keywords = []string{
 	"break", "case", "chan", "const", "continue",
@@ -19,7 +21,6 @@ var StyleEditor = tcell.StyleDefault.Background(ColorDarkGrey).Foreground(ColorW
 var StyleTab = tcell.StyleDefault.Background(ColorTabBg).Foreground(ColorWhite)
 var StyleTabActive = tcell.StyleDefault.Background(ColorTabBgActive).Foreground(ColorWhite)
 
-
 func InitKeywords() {
 	KeywordMap = map[string]tcell.Style{}
 
@@ -31,13 +32,11 @@ func InitKeywords() {
 func PrintWord(scr tcell.Screen, word string, x int, y int) {
 	kw, ok := KeywordMap[word]
 
-	if ok {
-		for i := 0; i < len(word); i++ {
-			scr.SetCell(x+i, y, kw, rune(word[i]))
-		}
-	} else {
-		for i := 0; i < len(word); i++ {
-			scr.SetCell(x+i, y, StyleEditor, rune(word[i]))
-		}
+	if !ok {
+		kw = StyleEditor
+	}
+
+	for i, c := range word {
+		scr.SetContent(x+i, y, c, nil, kw)
 	}
 }
