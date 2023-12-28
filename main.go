@@ -2,66 +2,51 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/jessehorne/jim/jim"
+	"github.com/rivo/tview"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Provide a path to a directory or file.")
-		fmt.Println("Try '--help' for more information.")
-		return
+		fmt.Println("Must specify a directory to open.")
+		os.Exit(1)
 	}
 
 	dir := os.Args[1]
 
-	if dir == "--help" {
-		fmt.Println(jim.HelpMessage)
-		return
-	}
-
-	f, err := os.Open(dir)
+	dirFile, err := os.Open(dir)
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
+	defer dirFile.Close()
 
-	defer f.Close()
-
-	fileInfo, err := f.Stat()
+	info, err := dirFile.Stat()
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
-	if !fileInfo.IsDir() {
-		fmt.Println("Invalid directory path.")
-		fmt.Println("Try `--help` for more information.")
-		return
+	if !info.IsDir() {
+		panic("Not a directory.")
 	}
 
-	tcell.SetEncodingFallback(tcell.EncodingFallbackUTF8)
-	s, err := tcell.NewScreen()
-	if err != nil {
-		log.Fatalln(err)
+	app := tview.NewApplication()
+
+	editor := jim.NewEditor(app, dirFile)
+
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyF1 {
+			return nil
+		} else if event.Key() == tcell.KeyCtrlS {
+			editor.SaveCurrentTab()
+		}
+
+		return event
+	})
+
+	if err := app.SetRoot(editor.Grid, true).SetFocus(editor.Grid).EnableMouse(true).Run(); err != nil {
+		panic(err)
 	}
-
-	if err = s.Init(); err != nil {
-		log.Fatalln(err)
-	}
-
-	s.SetStyle(tcell.StyleDefault.Background(jim.ColorDark).Foreground(jim.ColorWhite))
-	s.EnableMouse()
-	s.Clear()
-	s.Show()
-	s.Sync()
-
-	newManager := jim.NewManager(s)
-	newManager.Init(dir)
-	newManager.HandleInput()
-
-	s.Fini()
-
-	fmt.Println("Thanks.")
 }
