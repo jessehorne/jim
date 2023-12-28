@@ -1,7 +1,7 @@
 jim
 ===
 
-A simple terminal-based code editor written in Go.
+A terminal-based code editor with mouse support written in Go.
 
 **Lots to do. Stay tuned.**
 
