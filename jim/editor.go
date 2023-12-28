@@ -14,11 +14,15 @@ type Editor struct {
 
 	Pages     *tview.Pages
 	PagesOpen []string
+	LastPage  string
 
 	Tree    *Tree
 	Grid    *tview.Grid
 	Bottom  *tview.TextView
 	Bottom2 *tview.TextView
+	Bottom3 *tview.TextView
+
+	Search *SearchReplace
 
 	Tabs []*Tab
 }
@@ -35,10 +39,12 @@ func NewEditor(app *tview.Application, d *os.File) *Editor {
 	bottom.SetTextAlign(tview.AlignCenter)
 	bottom.SetText("jim v0.0.1")
 
-	bottom2 := tview.NewTextView()
-	bottom2.SetBorder(true)
-	bottom2.SetDynamicColors(true)
-	bottom2.SetTextAlign(tview.AlignRight)
+	e.Search = NewSearchReplace(e)
+
+	bottom3 := tview.NewTextView()
+	bottom3.SetBorder(false)
+	bottom3.SetDynamicColors(true)
+	bottom3.SetTextAlign(tview.AlignRight)
 
 	pages := tview.NewPages()
 	pages.SetBorder(false)
@@ -51,15 +57,19 @@ func NewEditor(app *tview.Application, d *os.File) *Editor {
 	grid.AddItem(treeView.Tree, 0, 0, 12, 3, 0, 0, false)
 	grid.AddItem(pages, 0, 4, 12, 15, 0, 0, false)
 	grid.AddItem(bottom, 12, 0, 1, 3, 0, 0, false)
-	grid.AddItem(bottom2, 12, 3, 1, 15, 0, 0, false)
+	grid.AddItem(e.Search.Form, 12, 3, 1, 7, 0, 0, false)
+	grid.AddItem(bottom3, 12, 10, 1, 10, 0, 0, false)
 
 	e.App = app
 	e.DirFile = d
+
 	e.Pages = pages
+
 	e.Tree = treeView
 	e.Grid = grid
 	e.Bottom = bottom
-	e.Bottom2 = bottom2
+	//e.Bottom2 = bottom2
+	e.Bottom3 = bottom3
 	e.Tabs = []*Tab{}
 
 	return e
@@ -83,9 +93,9 @@ func (e *Editor) OpenTab(p string) {
 		updateInfos := func() {
 			fromRow, fromColumn, toRow, toColumn := tv.GetCursor()
 			if fromRow == toRow && fromColumn == toColumn {
-				e.Bottom2.SetText(fmt.Sprintf("Row: [yellow]%d[white], Column: [yellow]%d ", fromRow, fromColumn))
+				e.Bottom3.SetText(fmt.Sprintf("Row: [yellow]%d[white], Column: [yellow]%d ", fromRow, fromColumn))
 			} else {
-				e.Bottom2.SetText(fmt.Sprintf("[red]From[white] Row: [yellow]%d[white], Column: [yellow]%d[white] - [red]To[white] Row: [yellow]%d[white], To Column: [yellow]%d ", fromRow, fromColumn, toRow, toColumn))
+				e.Bottom3.SetText(fmt.Sprintf("[red]From[white] Row: [yellow]%d[white], Column: [yellow]%d[white] - [red]To[white] Row: [yellow]%d[white], To Column: [yellow]%d ", fromRow, fromColumn, toRow, toColumn))
 			}
 		}
 
@@ -94,12 +104,14 @@ func (e *Editor) OpenTab(p string) {
 
 		e.Pages.AddPage(p, tv, true, true)
 		e.Pages.SwitchToPage(p)
+		e.LastPage = p
 
 		return
 	}
 
 	// if we get here, it means the tab should exist already. we should switch to it
 	e.Pages.SwitchToPage(p)
+	e.LastPage = p
 }
 
 func (e *Editor) SetTabActive(p string) {
@@ -135,4 +147,25 @@ func (e *Editor) SaveCurrentTab() {
 	if err != nil {
 		return
 	}
+}
+
+func (e *Editor) ToggleSearchReplaceModal() {
+	name, _ := e.Pages.GetFrontPage()
+
+	if name == "search" {
+		e.Pages.SwitchToPage(e.LastPage)
+	} else {
+		e.Pages.SwitchToPage("search")
+	}
+}
+
+func (e *Editor) SetCursor(x, y int) {
+	name, page := e.Pages.GetFrontPage()
+	if name == "" {
+		return
+	}
+
+	ta := page.(*TextArea)
+	e.App.SetFocus(page)
+	ta.SetCursor(x, y)
 }

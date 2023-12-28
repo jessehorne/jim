@@ -594,6 +594,15 @@ func (t *TextArea) GetSelection() (text string, start int, end int) {
 	return
 }
 
+func (t *TextArea) SetCursor(x, y int) {
+	// attempt to move offsets to match cursor position
+	t.moveCursor(y, x)
+
+	t.selectionStart.row, t.selectionStart.actualColumn = y, x
+	t.cursor.row = y
+	t.cursor.actualColumn = x
+}
+
 // GetCursor returns the current cursor position where the first character of
 // the entire text is in row 0, column 0. If the user has selected text, the
 // "from" values will refer to the beginning of the selection and the "to"
