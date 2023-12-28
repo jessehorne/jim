@@ -100,6 +100,7 @@ func (e *Editor) OpenTab(p string) {
 		}
 
 		tv.SetMovedFunc(updateInfos)
+		tv.SetChangedFunc(updateInfos)
 		updateInfos()
 
 		e.Pages.AddPage(p, tv, true, true)
@@ -168,4 +169,11 @@ func (e *Editor) SetCursor(x, y int) {
 	ta := page.(*TextArea)
 	e.App.SetFocus(page)
 	ta.SetCursor(x, y)
+
+	fromRow, fromColumn, toRow, toColumn := ta.GetCursor()
+	if fromRow == toRow && fromColumn == toColumn {
+		e.Bottom3.SetText(fmt.Sprintf("Row: [yellow]%d[white], Column: [yellow]%d ", fromRow, fromColumn))
+	} else {
+		e.Bottom3.SetText(fmt.Sprintf("[red]From[white] Row: [yellow]%d[white], Column: [yellow]%d[white] - [red]To[white] Row: [yellow]%d[white], To Column: [yellow]%d ", fromRow, fromColumn, toRow, toColumn))
+	}
 }
