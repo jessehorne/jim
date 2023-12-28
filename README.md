@@ -5,22 +5,13 @@ A simple terminal-based code editor written in Go.
 
 **Lots to do. Stay tuned.**
 
-![screeny](./assets/1.png)
+![screeny](./assets/2.png)
 
 # Usage
 
 ```shell
 go run main.go PATH_TO_DIRECTORY
 ```
-
-# Controls
-
-* Ctrl+W - Close current tab
-* Left Click - Toggles dir or opens file in tab
-* Arrow Keys - move cursor around
-* PgUp/PhDown - move pages up/down
-* Ctrl+S - Save current file
-* Mouse wheel scroll - Move cursor around code
 
 # Contributing
 
