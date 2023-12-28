@@ -5,7 +5,7 @@ A terminal-based code editor with mouse support written in Go.
 
 **Lots to do. Stay tuned.**
 
-![screeny](./assets/2.png)
+![screeny](./assets/latest.png)
 
 # Usage
 
