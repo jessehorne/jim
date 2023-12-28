@@ -50,8 +50,8 @@ func NewEditor(app *tview.Application, d *os.File) *Editor {
 
 	grid.AddItem(treeView.Tree, 0, 0, 12, 3, 0, 0, false)
 	grid.AddItem(pages, 0, 4, 12, 15, 0, 0, false)
-	grid.AddItem(bottom, 12, 0, 1, 5, 0, 0, false)
-	grid.AddItem(bottom2, 12, 6, 1, 14, 0, 0, false)
+	grid.AddItem(bottom, 12, 0, 1, 3, 0, 0, false)
+	grid.AddItem(bottom2, 12, 3, 1, 15, 0, 0, false)
 
 	e.App = app
 	e.DirFile = d
