@@ -27,21 +27,21 @@ func NewSearchReplace(e *Editor) *SearchReplace {
 
 	form := tview.NewForm()
 	form.SetHorizontal(true)
-	form.AddInputField("F", "", 10, nil, func(text string) {
+	form.AddInputField("", "", 20, nil, func(text string) {
 		searchTerm = text
 		lastIndex = 0
 	})
-	form.AddInputField("R", "", 10, nil, nil)
+	//form.AddInputField("R", "", 10, nil, nil)
 
-	form.AddButton("F", func() {
+	form.AddButton("Find", func() {
 		x, y, i := findXYOfWord(e, searchTerm, lastIndex)
 		e.SetCursor(x, y)
 		lastIndex = i
 	})
 
 	form.SetButtonStyle(tcell.StyleDefault.Background(tview.Styles.ContrastSecondaryTextColor))
-	form.AddButton("R", nil)
-	form.AddButton("RA", nil)
+	//form.AddButton("R", nil)
+	//form.AddButton("RA", nil)
 
 	return &SearchReplace{
 		Parent: e,
