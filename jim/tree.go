@@ -43,7 +43,7 @@ func NewTree(e *Editor, dir string) *Tree {
 	tree.SetChangedFunc(func (node *tview.TreeNode) {
 		p := node.GetReference()
 		if p != nil {
-			e.OpenTab(p.(string))
+			e.OpenTab(p.(string), node)
 		}
 	})
 	

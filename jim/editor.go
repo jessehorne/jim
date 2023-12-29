@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -25,6 +26,8 @@ type Editor struct {
 	Search *SearchReplace
 
 	Tabs []*Tab
+	
+	LastNode *tview.TreeNode
 }
 
 func NewEditor(app *tview.Application, d *os.File) *Editor {
@@ -75,7 +78,7 @@ func NewEditor(app *tview.Application, d *os.File) *Editor {
 	return e
 }
 
-func (e *Editor) OpenTab(p string) {
+func (e *Editor) OpenTab(p string, node *tview.TreeNode) {
 	t := NewTab(p)
 	if t == nil {
 		return
@@ -83,6 +86,8 @@ func (e *Editor) OpenTab(p string) {
 
 	d, _ := os.ReadFile(p)
 
+	e.LastNode = node
+	
 	// if tab isn't already open, we should open the tab and fill it with the content then set the line numbers
 	if !e.IsFileATab(p) {
 		e.Tabs = append(e.Tabs, t)
@@ -90,6 +95,7 @@ func (e *Editor) OpenTab(p string) {
 		tv := NewTextArea(path.Ext(p)).SetWordWrap(false).SetWrap(false)
 		tv.SetBorder(false)
 		tv.SetText(string(d), false)
+		
 		updateInfos := func() {
 			fromRow, fromColumn, toRow, toColumn := tv.GetCursor()
 			if fromRow == toRow && fromColumn == toColumn {
@@ -98,6 +104,14 @@ func (e *Editor) OpenTab(p string) {
 				e.Bottom3.SetText(fmt.Sprintf("[red]From[white] Row: [yellow]%d[white], Column: [yellow]%d[white] - [red]To[white] Row: [yellow]%d[white], To Column: [yellow]%d ", fromRow, fromColumn, toRow, toColumn))
 			}
 		}
+		tv.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			// set color in related tree node to yellow to show the file has been changed
+			if e.LastNode != nil {
+				e.LastNode.SetColor(tcell.NewHexColor(0xe8ffb7))
+			}
+			
+			return event
+		})
 
 		tv.SetMovedFunc(updateInfos)
 		tv.SetChangedFunc(updateInfos)
